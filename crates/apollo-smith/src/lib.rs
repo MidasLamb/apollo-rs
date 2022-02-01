@@ -15,11 +15,10 @@
 use std::collections::HashSet;
 
 use apollo_encoder::Schema;
-use arbitrary::Unstructured;
+use arbitrary::{Result, Unstructured};
 use enum_::EnumTypeDef;
 use interface::InterfaceTypeDef;
 use object::ObjectTypeDef;
-use rand::{thread_rng, Rng};
 
 pub(crate) mod argument;
 pub(crate) mod description;
@@ -35,7 +34,7 @@ pub(crate) mod object;
 pub(crate) mod ty;
 
 pub struct DocumentBuilder<'a> {
-    pub(crate) u: Unstructured<'a>,
+    pub(crate) u: &'a mut Unstructured<'a>,
     pub(crate) object_type_defs: Vec<ObjectTypeDef>,
     pub(crate) interface_type_defs: Vec<InterfaceTypeDef>,
     pub(crate) enum_type_defs: Vec<EnumTypeDef>,
@@ -45,9 +44,9 @@ pub struct DocumentBuilder<'a> {
 }
 
 impl<'a> DocumentBuilder<'a> {
-    pub fn new(btes: &'a [u8]) -> Self {
+    pub fn new(u: &'a mut Unstructured<'a>) -> Result<Self> {
         let mut builder = Self {
-            u: Unstructured::new(btes),
+            u,
             object_type_defs: Vec::new(),
             interface_type_defs: Vec::new(),
             enum_type_defs: Vec::new(),
@@ -55,19 +54,18 @@ impl<'a> DocumentBuilder<'a> {
             nested_level: 0,
             field_names: HashSet::new(),
         };
-        // TODO: use arbitrary
-        let mut rng = thread_rng();
-        for _ in 0..rng.gen_range(1..50) {
-            let interface_type_def = builder.interface_type_definition();
+
+        for _ in 0..builder.u.int_in_range(1..=50)? {
+            let interface_type_def = builder.interface_type_definition()?;
             builder.interface_type_defs.push(interface_type_def);
         }
 
-        for _ in 0..rng.gen_range(1..50) {
-            let object_type_def = builder.object_type_definition();
+        for _ in 0..builder.u.int_in_range(1..=50)? {
+            let object_type_def = builder.object_type_definition()?;
             builder.object_type_defs.push(object_type_def);
         }
 
-        builder
+        Ok(builder)
     }
 
     pub fn finish(self) -> Schema {

@@ -1,3 +1,5 @@
+use arbitrary::Result;
+
 use crate::DocumentBuilder;
 
 #[derive(Debug, Clone)]
@@ -31,7 +33,7 @@ impl Description {
 }
 
 impl<'a> DocumentBuilder<'a> {
-    pub fn description(&mut self) -> Description {
-        Description::new(self.limited_string(50))
+    pub fn description(&mut self) -> Result<Description> {
+        Ok(Description::new(self.limited_string(50)?))
     }
 }

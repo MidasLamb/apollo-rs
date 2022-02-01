@@ -5,12 +5,20 @@ use libfuzzer_sys::fuzz_target;
 use std::panic;
 
 fuzz_target!(|data: &[u8]| {
-    let doc_generated = generate_valid_document(data).unwrap();
+    let doc_generated = match generate_valid_document(data) {
+        Ok(d) => d,
+        Err(err) => {
+            // println!("error {err:?}");
+            return;
+        }
+    };
 
     let parser = panic::catch_unwind(|| Parser::new(&doc_generated));
 
     let parser = match parser {
-        Err(_) => return,
+        Err(err) => {
+            panic!("error {:?}", err);
+        }
         Ok(p) => p,
     };
 

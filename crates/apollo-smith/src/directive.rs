@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use arbitrary::Result;
 
 use crate::{argument::Argument, name::Name, DocumentBuilder};
 
@@ -9,19 +9,19 @@ pub struct Directive {
 // TODO implement From
 
 impl<'a> DocumentBuilder<'a> {
-    pub fn directives(&mut self) -> Vec<Directive> {
-        let mut rng = thread_rng();
-        let num_directives = rng.gen_range(0..5);
-        let directives = (0..num_directives).map(|_| self.directive());
+    pub fn directives(&mut self) -> Result<Vec<Directive>> {
+        let num_directives = self.u.int_in_range(0..=4)?;
+        let directives = (0..num_directives)
+            .map(|_| self.directive())
+            .collect::<Result<Vec<_>>>()?;
 
-        // TODO
-        directives.collect()
+        Ok(directives)
     }
 
-    pub fn directive(&mut self) -> Directive {
-        let name = self.name();
-        let arguments = self.arguments();
+    pub fn directive(&mut self) -> Result<Directive> {
+        let name = self.name()?;
+        let arguments = self.arguments()?;
 
-        Directive { name, arguments }
+        Ok(Directive { name, arguments })
     }
 }

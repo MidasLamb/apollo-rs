@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use apollo_encoder::Field;
-use rand::{thread_rng, Rng};
+use arbitrary::Result;
 
 use crate::{
     argument::ArgumentsDef, description::Description, name::Name, ty::Ty, DocumentBuilder,
@@ -29,16 +29,15 @@ impl From<FieldDef> for Field {
 }
 
 impl<'a> DocumentBuilder<'a> {
-    pub fn fields_definition(&mut self, exclude: &[&Name]) -> Vec<FieldDef> {
-        let mut rng = thread_rng();
-        let num_fields = rng.gen_range(2..50);
+    pub fn fields_definition(&mut self, exclude: &[&Name]) -> Result<Vec<FieldDef>> {
+        let num_fields = self.u.int_in_range(2..=50usize)?;
         let mut fields_names = HashSet::with_capacity(num_fields);
 
         // TODO switch to arbitrary
         for i in 0..num_fields {
-            let name = self.name_with_index(i);
+            let name = self.name_with_index(i)?;
             if !exclude.contains(&&name) {
-                fields_names.insert(self.name_with_index(i));
+                fields_names.insert(self.name_with_index(i)?);
             }
         }
 
@@ -51,16 +50,19 @@ impl<'a> DocumentBuilder<'a> {
 
         fields_names
             .into_iter()
-            .map(|field_name| FieldDef {
-                description: self
-                    .u
-                    .arbitrary()
-                    .unwrap_or(false)
-                    .then(|| self.description()),
-                name: field_name,
-                // TODO
-                arguments_definition: None,
-                ty: self.choose_ty(&available_types),
+            .map(|field_name| {
+                Ok(FieldDef {
+                    description: self
+                        .u
+                        .arbitrary()
+                        .unwrap_or(false)
+                        .then(|| self.description())
+                        .transpose()?,
+                    name: field_name,
+                    // TODO
+                    arguments_definition: None,
+                    ty: self.choose_ty(&available_types)?,
+                })
             })
             .collect()
     }

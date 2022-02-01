@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use arbitrary::Result;
 
 use crate::{input_value::InputValue, name::Name, DocumentBuilder};
 
@@ -13,18 +13,19 @@ pub struct Argument {
 // TODO implement From
 
 impl<'a> DocumentBuilder<'a> {
-    pub fn arguments(&mut self) -> Vec<Argument> {
-        let mut rng = thread_rng();
-        let num_arguments = rng.gen_range(0..5);
-        let arguments = (0..num_arguments).map(|_| self.argument());
+    pub fn arguments(&mut self) -> Result<Vec<Argument>> {
+        let num_arguments = self.u.int_in_range(0..=4)?;
+        let arguments = (0..num_arguments)
+            .map(|_| self.argument())
+            .collect::<Result<Vec<_>>>()?;
 
-        arguments.collect()
+        Ok(arguments)
     }
 
-    pub fn argument(&mut self) -> Argument {
-        let name = self.name();
-        let value = self.input_value();
+    pub fn argument(&mut self) -> Result<Argument> {
+        let name = self.name()?;
+        let value = self.input_value()?;
 
-        Argument { name, value }
+        Ok(Argument { name, value })
     }
 }

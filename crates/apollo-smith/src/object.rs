@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use apollo_encoder::ObjectDef;
+use arbitrary::Result;
 
 use crate::{
     description::Description, directive::Directive, field::FieldDef, name::Name, DocumentBuilder,
@@ -30,16 +31,17 @@ impl From<ObjectTypeDef> for ObjectDef {
 }
 
 impl<'a> DocumentBuilder<'a> {
-    pub fn object_type_definition(&mut self) -> ObjectTypeDef {
+    pub fn object_type_definition(&mut self) -> Result<ObjectTypeDef> {
         let description = self
             .u
             .arbitrary()
             .unwrap_or(false)
-            .then(|| self.description());
-        let name = self.type_name();
+            .then(|| self.description())
+            .transpose()?;
+        let name = self.type_name()?;
 
         // ---- Interface
-        let interface_impls = self.interface_implements();
+        let interface_impls = self.interface_implements()?;
         let implements_fields: Vec<FieldDef> = interface_impls
             .iter()
             .flat_map(|itf_name| {
@@ -57,16 +59,16 @@ impl<'a> DocumentBuilder<'a> {
                 .iter()
                 .map(|f| &f.name)
                 .collect::<Vec<&Name>>(),
-        );
+        )?;
         // Add fields coming from interfaces
         fields_def.extend(implements_fields);
 
-        ObjectTypeDef {
+        Ok(ObjectTypeDef {
             description,
-            directives: self.directives(),
+            directives: self.directives()?,
             interface_impls,
             name,
             fields_def,
-        }
+        })
     }
 }

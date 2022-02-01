@@ -1,11 +1,12 @@
 use apollo_smith::DocumentBuilder;
-use libfuzzer_sys::arbitrary::Result;
+use libfuzzer_sys::arbitrary::{Result, Unstructured};
 
 pub fn generate_valid_document(
     input: &[u8],
     // configure: impl FnOnce(&mut SwarmConfig, &mut Unstructured<'_>) -> Result<()>,
 ) -> Result<String> {
-    let gql_doc = DocumentBuilder::new(input);
+    let mut u = Unstructured::new(input);
+    let gql_doc = DocumentBuilder::new(&mut u)?;
     let schema = gql_doc.finish().finish();
     // Use wasm-smith to generate an arbitrary module and convert it to wasm
     // bytes.

@@ -2,7 +2,7 @@ use core::num;
 use std::collections::HashSet;
 
 use apollo_encoder::InterfaceDef;
-use rand::{thread_rng, Rng};
+use arbitrary::Result;
 
 use crate::{description::Description, field::FieldDef, name::Name, DocumentBuilder};
 
@@ -30,34 +30,34 @@ impl From<InterfaceTypeDef> for InterfaceDef {
 }
 
 impl<'a> DocumentBuilder<'a> {
-    pub fn interface_type_definition(&mut self) -> InterfaceTypeDef {
+    pub fn interface_type_definition(&mut self) -> Result<InterfaceTypeDef> {
         let description = self
             .u
             .arbitrary()
             .unwrap_or(false)
-            .then(|| self.description());
-        let name = self.type_name();
-        let fields_def = self.fields_definition(&[]);
+            .then(|| Ok(self.description()?))
+            .transpose()?;
+        let name = self.type_name()?;
+        let fields_def = self.fields_definition(&[])?;
 
-        InterfaceTypeDef {
+        Ok(InterfaceTypeDef {
             description,
             name,
             fields_def,
-        }
+        })
     }
 
-    pub fn interface_implements(&mut self) -> HashSet<Name> {
-        let mut rng = thread_rng();
-
+    pub fn interface_implements(&mut self) -> Result<HashSet<Name>> {
         // let num_itf = self.u.arbitrary::<usize>().unwrap() % self.interface_type_defs.len();
-        let num_itf = rng.gen_range(0..self.interface_type_defs.len());
+        let num_itf = self
+            .u
+            .int_in_range(0..=(self.interface_type_defs.len() - 1))?;
         let mut interface_impls = HashSet::with_capacity(num_itf);
 
         for _ in 0..num_itf {
-            let arbitrary_idx = rng.gen_range(0..self.interface_type_defs.len());
-            interface_impls.insert(self.interface_type_defs[arbitrary_idx].name.clone());
+            interface_impls.insert(self.u.choose(&self.interface_type_defs)?.name.clone());
         }
 
-        interface_impls
+        Ok(interface_impls)
     }
 }
