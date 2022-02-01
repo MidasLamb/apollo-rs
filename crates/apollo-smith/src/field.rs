@@ -37,7 +37,7 @@ impl<'a> DocumentBuilder<'a> {
         for i in 0..num_fields {
             let name = self.name_with_index(i)?;
             if !exclude.contains(&&name) {
-                fields_names.insert(self.name_with_index(i)?);
+                fields_names.insert(name);
             }
         }
 
@@ -46,6 +46,11 @@ impl<'a> DocumentBuilder<'a> {
             .object_type_defs
             .iter()
             .map(|o| Ty::Named(o.name.clone()))
+            .chain(
+                self.enum_type_defs
+                    .iter()
+                    .map(|e| Ty::Named(e.name.clone())),
+            )
             .collect();
 
         fields_names

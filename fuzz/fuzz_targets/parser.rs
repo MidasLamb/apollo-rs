@@ -26,7 +26,12 @@ fuzz_target!(|data: &[u8]| {
     let tree = parser.parse();
     println!("Parsed");
     // early return if the parser detected an error
-    if tree.errors().next().is_some() {
+    let mut should_panic = false;
+    for err in tree.errors() {
+        should_panic = true;
+        println!("Parser error ============= {err:?}");
+    }
+    if should_panic {
         panic!("error detected");
     }
 });

@@ -56,6 +56,11 @@ impl<'a> DocumentBuilder<'a> {
         };
 
         for _ in 0..builder.u.int_in_range(1..=50)? {
+            let enum_type_def = builder.enum_type_definition()?;
+            builder.enum_type_defs.push(enum_type_def);
+        }
+
+        for _ in 0..builder.u.int_in_range(1..=50)? {
             let interface_type_def = builder.interface_type_definition()?;
             builder.interface_type_defs.push(interface_type_def);
         }
@@ -70,12 +75,15 @@ impl<'a> DocumentBuilder<'a> {
 
     pub fn finish(self) -> Schema {
         let mut schema = Schema::new();
-        self.object_type_defs
+        self.enum_type_defs
             .into_iter()
-            .for_each(|obj| schema.object(obj.into()));
+            .for_each(|enum_| schema.enum_(enum_.into()));
         self.interface_type_defs
             .into_iter()
             .for_each(|itf| schema.interface(itf.into()));
+        self.object_type_defs
+            .into_iter()
+            .for_each(|obj| schema.object(obj.into()));
 
         schema
     }

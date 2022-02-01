@@ -2,7 +2,7 @@ use arbitrary::Result;
 
 use crate::DocumentBuilder;
 
-const CHARSET_LETTERS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const CHARSET_LETTERS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
 const CHARSET_NUMBERS: &[u8] = b"0123456789";
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -66,7 +66,8 @@ impl<'a> DocumentBuilder<'a> {
 
                         // Cannot start with a number
                         let ch = if curr_idx == 0 {
-                            CHARSET_LETTERS[idx % CHARSET_LETTERS.len()]
+                            // len - 1 to not have a _ at the begining
+                            CHARSET_LETTERS[idx % (CHARSET_LETTERS.len() - 1)]
                         } else {
                             let idx = idx % (CHARSET_LETTERS.len() + CHARSET_NUMBERS.len());
                             if idx < CHARSET_LETTERS.len() {
@@ -81,9 +82,9 @@ impl<'a> DocumentBuilder<'a> {
                     .collect::<Result<Vec<u8>>>()?,
             )
             .unwrap();
-
-            if !gen_str.is_empty() {
-                break Ok(gen_str);
+            let new_gen = gen_str.trim_end_matches('_');
+            if !new_gen.is_empty() {
+                break Ok(new_gen.to_string());
             }
         }
     }

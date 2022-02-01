@@ -2,7 +2,7 @@ use arbitrary::Result;
 
 use crate::DocumentBuilder;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Description {
     desc: StringValue,
 }
@@ -13,7 +13,7 @@ impl From<Description> for String {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct StringValue {
     content: String,
 }
