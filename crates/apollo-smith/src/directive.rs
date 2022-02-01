@@ -2,6 +2,7 @@ use arbitrary::Result;
 
 use crate::{argument::Argument, name::Name, DocumentBuilder};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Directive {
     pub(crate) name: Name,
     pub(crate) arguments: Vec<Argument>,

@@ -1,4 +1,3 @@
-use core::num;
 use std::collections::HashSet;
 
 use apollo_encoder::InterfaceDef;
@@ -35,7 +34,7 @@ impl<'a> DocumentBuilder<'a> {
             .u
             .arbitrary()
             .unwrap_or(false)
-            .then(|| Ok(self.description()?))
+            .then(|| self.description())
             .transpose()?;
         let name = self.type_name()?;
         let fields_def = self.fields_definition(&[])?;

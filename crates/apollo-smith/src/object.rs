@@ -11,7 +11,7 @@ pub struct ObjectTypeDef {
     pub(crate) description: Option<Description>,
     pub(crate) name: Name,
     pub(crate) interface_impls: HashSet<Name>,
-    directives: Vec<Directive>,
+    pub(crate) directives: Vec<Directive>,
     pub(crate) fields_def: Vec<FieldDef>,
 }
 

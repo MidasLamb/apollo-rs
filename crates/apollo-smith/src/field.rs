@@ -19,8 +19,10 @@ pub struct FieldDef {
 impl From<FieldDef> for Field {
     fn from(val: FieldDef) -> Self {
         let mut field = Field::new(val.name.into(), val.ty.into());
-        if let Some(args) = val.arguments_definition {
-            // TODO add arg fields.arg(....)
+        if let Some(arg) = val.arguments_definition {
+            arg.input_value_definitions
+                .into_iter()
+                .for_each(|input_val| field.arg(input_val.into()));
         }
         field.description(val.description.map(String::from));
 
@@ -42,16 +44,7 @@ impl<'a> DocumentBuilder<'a> {
         }
 
         // TODO add mechanism to add own type for recursive type
-        let available_types: Vec<Ty> = self
-            .object_type_defs
-            .iter()
-            .map(|o| Ty::Named(o.name.clone()))
-            .chain(
-                self.enum_type_defs
-                    .iter()
-                    .map(|e| Ty::Named(e.name.clone())),
-            )
-            .collect();
+        let available_types: Vec<Ty> = self.list_existing_types();
 
         fields_names
             .into_iter()
@@ -65,7 +58,12 @@ impl<'a> DocumentBuilder<'a> {
                         .transpose()?,
                     name: field_name,
                     // TODO
-                    arguments_definition: None,
+                    arguments_definition: self
+                        .u
+                        .arbitrary()
+                        .unwrap_or(false)
+                        .then(|| self.arguments_definition())
+                        .transpose()?,
                     ty: self.choose_ty(&available_types)?,
                 })
             })

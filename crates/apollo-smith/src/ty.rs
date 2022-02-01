@@ -36,6 +36,16 @@ impl From<Ty> for Type_ {
     }
 }
 
+impl Ty {
+    pub(crate) fn name(&self) -> &Name {
+        match self {
+            Ty::Named(name) => name,
+            Ty::List(list) => list.name(),
+            Ty::NonNull(non_null) => non_null.name(),
+        }
+    }
+}
+
 impl<'a> DocumentBuilder<'a> {
     pub fn ty(&mut self) -> Result<Ty> {
         self.generate_ty(true)
@@ -91,5 +101,17 @@ impl<'a> DocumentBuilder<'a> {
         };
 
         Ok(ty)
+    }
+
+    pub(crate) fn list_existing_types(&self) -> Vec<Ty> {
+        self.object_type_defs
+            .iter()
+            .map(|o| Ty::Named(o.name.clone()))
+            .chain(
+                self.enum_type_defs
+                    .iter()
+                    .map(|e| Ty::Named(e.name.clone())),
+            )
+            .collect()
     }
 }

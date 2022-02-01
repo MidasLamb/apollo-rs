@@ -1,7 +1,7 @@
-use crate::{name::Name, DocumentBuilder};
+use crate::{description::Description, directive::Directive, name::Name, ty::Ty, DocumentBuilder};
 use arbitrary::Result;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum InputValue {
     // TODO
     // Variable()
@@ -19,6 +19,52 @@ impl From<InputValue> for apollo_encoder::InputValue {
     fn from(input_value: InputValue) -> Self {
         // InputValue as we use it is not implemented in apollo_encoder
         todo!()
+    }
+}
+
+impl From<InputValue> for String {
+    fn from(input_val: InputValue) -> Self {
+        match input_val {
+            InputValue::Int(i) => format!("{i}"),
+            InputValue::Float(f) => format!("{f}"),
+            InputValue::String(s) => s,
+            InputValue::Boolean(b) => format!("{b}"),
+            InputValue::Null => String::from("null"),
+            InputValue::Enum(val) => val.into(),
+            InputValue::List(list) => format!(
+                "[{}]",
+                list.into_iter()
+                    .map(String::from)
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
+            InputValue::Object(obj) => format!(
+                "{{ {} }}",
+                obj.into_iter()
+                    .map(|(k, v)| format!("{}: {}", String::from(k), String::from(v)))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct InputValueDef {
+    pub(crate) description: Option<Description>,
+    pub(crate) name: Name,
+    pub(crate) ty: Ty,
+    pub(crate) default_value: Option<InputValue>,
+    pub(crate) directives: Vec<Directive>,
+}
+
+impl From<InputValueDef> for apollo_encoder::InputValue {
+    fn from(input_val: InputValueDef) -> Self {
+        let mut new_input_val = Self::new(input_val.name.into(), input_val.ty.into());
+        new_input_val.description(input_val.description.map(String::from));
+        new_input_val.default(input_val.default_value.map(String::from));
+
+        new_input_val
     }
 }
 
@@ -64,5 +110,68 @@ impl<'a> DocumentBuilder<'a> {
         };
 
         Ok(val)
+    }
+    pub fn input_value_for_ty(&mut self, _ty: &Ty) -> Result<InputValue> {
+        todo!("need to check the type, if it's an object type we need to generate a value of this object type")
+    }
+
+    pub fn input_values_def(&mut self) -> Result<Vec<InputValueDef>> {
+        let arbitrary_iv_num = self.u.int_in_range(2..=5usize)?;
+        let mut input_values = Vec::with_capacity(arbitrary_iv_num - 1);
+
+        for i in 0..arbitrary_iv_num {
+            let description = self
+                .u
+                .arbitrary()
+                .unwrap_or(false)
+                .then(|| self.description())
+                .transpose()?;
+            let name = self.name_with_index(i)?;
+            let ty = self.choose_ty(&self.list_existing_types())?;
+            let directives = self.directives()?;
+            // TODO: FIXME: it's not correct I need to generate default value corresponding to the ty above
+            let default_value = self
+                .u
+                .arbitrary()
+                .unwrap_or(false)
+                .then(|| self.input_value())
+                .transpose()?;
+
+            input_values.push(InputValueDef {
+                description,
+                name,
+                ty,
+                default_value,
+                directives,
+            });
+        }
+
+        Ok(input_values)
+    }
+    pub fn input_value_def(&mut self) -> Result<InputValueDef> {
+        let description = self
+            .u
+            .arbitrary()
+            .unwrap_or(false)
+            .then(|| self.description())
+            .transpose()?;
+        let name = self.name()?;
+        let ty = self.choose_ty(&self.list_existing_types())?;
+        let directives = self.directives()?;
+        // TODO: FIXME: it's not correct I need to generate default value corresponding to the ty above
+        let default_value = self
+            .u
+            .arbitrary()
+            .unwrap_or(false)
+            .then(|| self.input_value())
+            .transpose()?;
+
+        Ok(InputValueDef {
+            description,
+            name,
+            ty,
+            default_value,
+            directives,
+        })
     }
 }

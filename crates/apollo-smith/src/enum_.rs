@@ -27,12 +27,12 @@ impl From<EnumTypeDef> for EnumDef {
     }
 }
 
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone)]
 pub struct EnumValueDefinition {
     pub(crate) description: Option<Description>,
     pub(crate) value: Name,
     // TODO
-    // pub(crate) directives: Vec<Directive>,
+    pub(crate) directives: Vec<Directive>,
 }
 
 impl From<EnumValueDefinition> for EnumValue {
@@ -49,6 +49,8 @@ impl PartialEq for EnumValueDefinition {
         self.value == other.value
     }
 }
+
+impl Eq for EnumValueDefinition {}
 
 impl Hash for EnumValueDefinition {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -90,7 +92,7 @@ impl<'a> DocumentBuilder<'a> {
 
     pub fn enum_values_definition(&mut self) -> Result<HashSet<EnumValueDefinition>> {
         let mut enum_values_def = HashSet::with_capacity(self.u.int_in_range(2..=10usize)?);
-        for i in (1..self.u.int_in_range(2..=10usize)?) {
+        for i in 1..self.u.int_in_range(2..=10usize)? {
             let description = self
                 .u
                 .arbitrary()
@@ -98,8 +100,13 @@ impl<'a> DocumentBuilder<'a> {
                 .then(|| self.description())
                 .transpose()?;
             let value = self.name_with_index(i)?;
+            let directives = self.directives()?;
 
-            enum_values_def.insert(EnumValueDefinition { description, value });
+            enum_values_def.insert(EnumValueDefinition {
+                description,
+                value,
+                directives,
+            });
         }
 
         Ok(enum_values_def)

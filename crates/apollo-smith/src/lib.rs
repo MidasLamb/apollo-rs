@@ -12,8 +12,6 @@
 //     Ok(Instruction::F64Const(x))
 // }
 
-use std::collections::HashSet;
-
 use apollo_encoder::Schema;
 use arbitrary::{Result, Unstructured};
 use enum_::EnumTypeDef;
@@ -38,9 +36,6 @@ pub struct DocumentBuilder<'a> {
     pub(crate) object_type_defs: Vec<ObjectTypeDef>,
     pub(crate) interface_type_defs: Vec<InterfaceTypeDef>,
     pub(crate) enum_type_defs: Vec<EnumTypeDef>,
-    pub(crate) type_names: HashSet<String>,
-    pub(crate) nested_level: u8,
-    pub(crate) field_names: HashSet<String>,
 }
 
 impl<'a> DocumentBuilder<'a> {
@@ -50,9 +45,6 @@ impl<'a> DocumentBuilder<'a> {
             object_type_defs: Vec::new(),
             interface_type_defs: Vec::new(),
             enum_type_defs: Vec::new(),
-            type_names: HashSet::new(),
-            nested_level: 0,
-            field_names: HashSet::new(),
         };
 
         for _ in 0..builder.u.int_in_range(1..=50)? {
