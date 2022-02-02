@@ -3,7 +3,9 @@ use std::collections::HashSet;
 use apollo_encoder::InterfaceDef;
 use arbitrary::Result;
 
-use crate::{description::Description, field::FieldDef, name::Name, DocumentBuilder};
+use crate::{
+    description::Description, directive::Directive, field::FieldDef, name::Name, DocumentBuilder,
+};
 
 #[derive(Debug, Clone)]
 pub struct InterfaceTypeDef {
@@ -11,7 +13,7 @@ pub struct InterfaceTypeDef {
     pub(crate) name: Name,
     // TODO
     // interfaces: Vec<String>
-    // pub(crate) directives: Vec<Directive>,
+    pub(crate) directives: Vec<Directive>,
     pub(crate) fields_def: Vec<FieldDef>,
 }
 
@@ -22,7 +24,10 @@ impl From<InterfaceTypeDef> for InterfaceDef {
         itf.fields_def
             .into_iter()
             .for_each(|f| itf_def.field(f.into()));
-        // TODO interfaces + directives
+        itf.directives
+            .into_iter()
+            .for_each(|directive| itf_def.directive(directive.into()));
+        // TODO interfaces
 
         itf_def
     }
@@ -38,11 +43,13 @@ impl<'a> DocumentBuilder<'a> {
             .transpose()?;
         let name = self.type_name()?;
         let fields_def = self.fields_definition(&[])?;
+        let directives = self.directives()?;
 
         Ok(InterfaceTypeDef {
             description,
             name,
             fields_def,
+            directives,
         })
     }
 

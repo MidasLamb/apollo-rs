@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 
 use crate::{name::Name, DocumentBuilder};
 
-// TODO should be include in document builder when created
+// TODO should be include in document builder when created ?
 static BUILTIN_SCALAR_NAMES: Lazy<[Ty; 5]> = Lazy::new(|| {
     [
         Ty::Named(Name::new(String::from("Int"))),

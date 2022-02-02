@@ -20,11 +20,10 @@ use object::ObjectTypeDef;
 
 pub(crate) mod argument;
 pub(crate) mod description;
-pub(crate) mod document;
-pub(crate) mod field;
-// pub(crate) mod grammar;
+// pub(crate) mod document;
 pub(crate) mod directive;
 pub(crate) mod enum_;
+pub(crate) mod field;
 pub(crate) mod input_value;
 pub(crate) mod interface;
 pub(crate) mod name;

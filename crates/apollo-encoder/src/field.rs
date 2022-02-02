@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{InputValue, StringValue, Type_};
+use crate::{Directive, InputValueDef, StringValue, Type_};
 /// The __Field type represents each field in an Object or Interface type.
 ///
 /// *FieldDefinition*:
@@ -38,13 +38,15 @@ pub struct Field {
     // Description may return a String.
     description: StringValue,
     // Args returns a List of __InputValue representing the arguments this field accepts.
-    args: Vec<InputValue>,
+    args: Vec<InputValueDef>,
     // Type must return a __Type that represents the type of value returned by this field.
     type_: Type_,
     // Deprecated returns true if this field should no longer be used, otherwise false.
     is_deprecated: bool,
     // Deprecation reason optionally provides a reason why this field is deprecated.
     deprecation_reason: StringValue,
+    /// Contains all directives.
+    directives: Vec<Directive>,
 }
 
 impl Field {
@@ -57,6 +59,7 @@ impl Field {
             args: Vec::new(),
             is_deprecated: false,
             deprecation_reason: StringValue::Reason { source: None },
+            directives: Vec::new(),
         }
     }
 
@@ -74,8 +77,13 @@ impl Field {
     }
 
     /// Set the Field's arguments.
-    pub fn arg(&mut self, arg: InputValue) {
+    pub fn arg(&mut self, arg: InputValueDef) {
         self.args.push(arg);
+    }
+
+    /// Add a directive.
+    pub fn directive(&mut self, directive: Directive) {
+        self.directives.push(directive)
     }
 }
 
@@ -106,12 +114,18 @@ impl fmt::Display for Field {
             }
         }
 
+        for directive in &self.directives {
+            write!(f, " {}", directive)?;
+        }
+
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::{Argument, Value};
+
     use super::*;
     use pretty_assertions::assert_eq;
 
@@ -143,6 +157,27 @@ mod tests {
             field.to_string(),
             r#"  "Very good cats"
   cat: [SpaceProgram] @deprecated(reason: "Cats are no longer sent to space.")"#
+        );
+    }
+
+    #[test]
+    fn it_encodes_fields_with_directive() {
+        let ty_1 = Type_::NamedType {
+            name: "SpaceProgram".to_string(),
+        };
+
+        let ty_2 = Type_::List { ty: Box::new(ty_1) };
+        let mut field = Field::new("cat".to_string(), ty_2);
+        let mut directive = Directive::new(String::from("testDirective"));
+        directive.arg(Argument::new(String::from("first"), Value::Int(1)));
+        field.description(Some("Very good cats".to_string()));
+        field.deprecated(Some("Cats are no longer sent to space.".to_string()));
+        field.directive(directive);
+
+        assert_eq!(
+            field.to_string(),
+            r#"  "Very good cats"
+  cat: [SpaceProgram] @deprecated(reason: "Cats are no longer sent to space.") @testDirective(first: 1)"#
         );
     }
 
@@ -184,7 +219,7 @@ mod tests {
         let value_2 = Type_::List {
             ty: Box::new(value_1),
         };
-        let mut arg = InputValue::new("cat".to_string(), value_2);
+        let mut arg = InputValueDef::new("cat".to_string(), value_2);
         arg.deprecated(Some("Cats are no longer sent to space.".to_string()));
         field.arg(arg);
 

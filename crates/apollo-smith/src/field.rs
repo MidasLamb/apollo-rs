@@ -4,7 +4,8 @@ use apollo_encoder::Field;
 use arbitrary::Result;
 
 use crate::{
-    argument::ArgumentsDef, description::Description, name::Name, ty::Ty, DocumentBuilder,
+    argument::ArgumentsDef, description::Description, directive::Directive, name::Name, ty::Ty,
+    DocumentBuilder,
 };
 
 #[derive(Debug, Clone)]
@@ -13,7 +14,7 @@ pub struct FieldDef {
     pub(crate) name: Name,
     pub(crate) arguments_definition: Option<ArgumentsDef>,
     pub(crate) ty: Ty,
-    // directives: Vec<Directive>
+    pub(crate) directives: Vec<Directive>,
 }
 
 impl From<FieldDef> for Field {
@@ -25,6 +26,9 @@ impl From<FieldDef> for Field {
                 .for_each(|input_val| field.arg(input_val.into()));
         }
         field.description(val.description.map(String::from));
+        val.directives
+            .into_iter()
+            .for_each(|directive| field.directive(directive.into()));
 
         field
     }
@@ -57,7 +61,6 @@ impl<'a> DocumentBuilder<'a> {
                         .then(|| self.description())
                         .transpose()?,
                     name: field_name,
-                    // TODO
                     arguments_definition: self
                         .u
                         .arbitrary()
@@ -65,6 +68,7 @@ impl<'a> DocumentBuilder<'a> {
                         .then(|| self.arguments_definition())
                         .transpose()?,
                     ty: self.choose_ty(&available_types)?,
+                    directives: self.directives()?,
                 })
             })
             .collect()

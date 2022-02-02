@@ -4,7 +4,7 @@ use arbitrary::Result;
 #[derive(Debug, Clone, PartialEq)]
 pub enum InputValue {
     // TODO
-    // Variable()
+    Variable(Name),
     Int(i64),
     Float(f64),
     String(String),
@@ -15,16 +15,28 @@ pub enum InputValue {
     Object(Vec<(Name, InputValue)>),
 }
 
-impl From<InputValue> for apollo_encoder::InputValue {
+impl From<InputValue> for apollo_encoder::Value {
     fn from(input_value: InputValue) -> Self {
-        // InputValue as we use it is not implemented in apollo_encoder
-        todo!()
+        match input_value {
+            InputValue::Variable(v) => Self::Variable(v.into()),
+            InputValue::Int(i) => Self::Int(i),
+            InputValue::Float(f) => Self::Float(f),
+            InputValue::String(s) => Self::String(s),
+            InputValue::Boolean(b) => Self::Boolean(b),
+            InputValue::Null => Self::Null,
+            InputValue::Enum(enm) => Self::Enum(enm.into()),
+            InputValue::List(l) => Self::List(l.into_iter().map(Into::into).collect()),
+            InputValue::Object(o) => {
+                Self::Object(o.into_iter().map(|(n, i)| (n.into(), i.into())).collect())
+            }
+        }
     }
 }
 
 impl From<InputValue> for String {
     fn from(input_val: InputValue) -> Self {
         match input_val {
+            InputValue::Variable(v) => format!("${}", String::from(v)),
             InputValue::Int(i) => format!("{i}"),
             InputValue::Float(f) => format!("{f}"),
             InputValue::String(s) => s,
@@ -58,11 +70,15 @@ pub struct InputValueDef {
     pub(crate) directives: Vec<Directive>,
 }
 
-impl From<InputValueDef> for apollo_encoder::InputValue {
+impl From<InputValueDef> for apollo_encoder::InputValueDef {
     fn from(input_val: InputValueDef) -> Self {
         let mut new_input_val = Self::new(input_val.name.into(), input_val.ty.into());
         new_input_val.description(input_val.description.map(String::from));
         new_input_val.default(input_val.default_value.map(String::from));
+        input_val
+            .directives
+            .into_iter()
+            .for_each(|directive| new_input_val.directive(directive.into()));
 
         new_input_val
     }
@@ -70,7 +86,7 @@ impl From<InputValueDef> for apollo_encoder::InputValue {
 
 impl<'a> DocumentBuilder<'a> {
     pub fn input_value(&mut self) -> Result<InputValue> {
-        let val = match self.u.int_in_range(0..=7usize)? {
+        let val = match self.u.int_in_range(0..=8usize)? {
             // Int
             0 => InputValue::Int(self.u.arbitrary()?),
             // Float
@@ -93,7 +109,7 @@ impl<'a> DocumentBuilder<'a> {
             }
             // List
             6 => {
-                // FIXME: it's wrong it should always be the same type inside
+                // FIXME: it's semantically wrong it should always be the same type inside
                 InputValue::List(
                     (1..self.u.int_in_range(2..=4usize)?)
                         .map(|_| self.input_value())
@@ -106,6 +122,8 @@ impl<'a> DocumentBuilder<'a> {
                     .map(|_| Ok((self.name()?, self.input_value()?)))
                     .collect::<Result<Vec<_>>>()?,
             ),
+            // Variable TODO: only generate valid variable name (existing variables)
+            8 => InputValue::Variable(self.name()?),
             _ => unreachable!(),
         };
 

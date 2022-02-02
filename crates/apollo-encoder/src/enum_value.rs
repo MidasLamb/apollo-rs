@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::StringValue;
+use crate::{Directive, StringValue};
 
 /// The __EnumValue type represents one of possible values of an enum.
 ///
@@ -33,6 +33,8 @@ pub struct EnumValue {
     is_deprecated: bool,
     // Deprecation reason optionally provides a reason why this enum value is deprecated.
     deprecation_reason: StringValue,
+    /// The vector of directives
+    directives: Vec<Directive>,
 }
 
 impl EnumValue {
@@ -43,6 +45,7 @@ impl EnumValue {
             is_deprecated: false,
             description: StringValue::Field { source: None },
             deprecation_reason: StringValue::Reason { source: None },
+            directives: Vec::new(),
         }
     }
 
@@ -57,6 +60,11 @@ impl EnumValue {
     pub fn deprecated(&mut self, reason: Option<String>) {
         self.is_deprecated = true;
         self.deprecation_reason = StringValue::Reason { source: reason };
+    }
+
+    /// Add a directive.
+    pub fn directive(&mut self, directive: Directive) {
+        self.directives.push(directive)
     }
 }
 
@@ -73,6 +81,9 @@ impl fmt::Display for EnumValue {
                 write!(f, ")")?
             }
         }
+        for directive in &self.directives {
+            write!(f, " {}", directive)?;
+        }
 
         Ok(())
     }
@@ -80,6 +91,8 @@ impl fmt::Display for EnumValue {
 
 #[cfg(test)]
 mod tests {
+    use crate::{Argument, Value};
+
     use super::*;
     use pretty_assertions::assert_eq;
 
@@ -112,6 +125,27 @@ mod tests {
   spot.
   """
   CARDBOARD_BOX @deprecated(reason: "Box was recycled.")"#
+        );
+    }
+
+    #[test]
+    fn it_encodes_an_enum_value_with_directive() {
+        let mut enum_ty = EnumValue::new("CARDBOARD_BOX".to_string());
+        let mut directive = Directive::new(String::from("testDirective"));
+        directive.arg(Argument::new(
+            String::from("first"),
+            Value::List(vec![Value::Int(1), Value::Int(2)]),
+        ));
+        enum_ty.description(Some("Box nap\nspot.".to_string()));
+        enum_ty.directive(directive);
+
+        assert_eq!(
+            enum_ty.to_string(),
+            r#"  """
+  Box nap
+  spot.
+  """
+  CARDBOARD_BOX @testDirective(first: [1, 2])"#
         );
     }
 

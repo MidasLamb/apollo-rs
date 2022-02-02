@@ -25,6 +25,9 @@ impl From<ObjectTypeDef> for ObjectDef {
             .into_iter()
             .for_each(|fd| object_def.field(fd.into()));
         object_def.description(val.description.map(String::from));
+        val.directives
+            .into_iter()
+            .for_each(|directive| object_def.directive(directive.into()));
 
         object_def
     }

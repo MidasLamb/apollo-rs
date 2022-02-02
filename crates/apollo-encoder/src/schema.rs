@@ -1,5 +1,5 @@
 use crate::{
-    Directive, EnumDef, InputObjectDef, InterfaceDef, ObjectDef, ScalarDef, SchemaDef, UnionDef,
+    DirectiveDef, EnumDef, InputObjectDef, InterfaceDef, ObjectDef, ScalarDef, SchemaDef, UnionDef,
 };
 
 /// GraphQLSchema represented in Schema Definition Language.
@@ -44,7 +44,7 @@ impl Schema {
     }
 
     /// Adds a new Directive Definition.
-    pub fn directive(&mut self, directive: Directive) {
+    pub fn directive(&mut self, directive: DirectiveDef) {
         self.buf.push_str(&directive.to_string());
     }
 
@@ -101,7 +101,7 @@ impl Default for Schema {
 #[cfg(test)]
 mod tests {
     use crate::{
-        Directive, EnumDef, EnumValue, Field, InputField, InputObjectDef, ObjectDef, ScalarDef,
+        DirectiveDef, EnumDef, EnumValue, Field, InputField, InputObjectDef, ObjectDef, ScalarDef,
         Schema, SchemaDef, Type_, UnionDef,
     };
     use indoc::indoc;
@@ -112,7 +112,7 @@ mod tests {
         let mut schema = Schema::new();
 
         // create a directive
-        let mut directive = Directive::new("provideTreat".to_string());
+        let mut directive = DirectiveDef::new("provideTreat".to_string());
         directive.description(Some("Ensures cats get treats.".to_string()));
         directive.location("OBJECT".to_string());
         directive.location("FIELD_DEFINITION".to_string());

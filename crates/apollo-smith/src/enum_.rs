@@ -9,8 +9,7 @@ use crate::{description::Description, directive::Directive, name::Name, Document
 pub struct EnumTypeDef {
     pub(crate) description: Option<Description>,
     pub(crate) name: Name,
-    // TODO
-    // pub(crate) directives: Vec<Directive>,
+    pub(crate) directives: Vec<Directive>,
     pub(crate) enum_values_def: HashSet<EnumValueDefinition>,
 }
 
@@ -22,6 +21,10 @@ impl From<EnumTypeDef> for EnumDef {
             .enum_values_def
             .into_iter()
             .for_each(|val| new_enum.value(val.into()));
+        enum_
+            .directives
+            .into_iter()
+            .for_each(|directive| new_enum.directive(directive.into()));
 
         new_enum
     }
@@ -31,7 +34,6 @@ impl From<EnumTypeDef> for EnumDef {
 pub struct EnumValueDefinition {
     pub(crate) description: Option<Description>,
     pub(crate) value: Name,
-    // TODO
     pub(crate) directives: Vec<Directive>,
 }
 
@@ -39,6 +41,10 @@ impl From<EnumValueDefinition> for EnumValue {
     fn from(enum_val: EnumValueDefinition) -> Self {
         let mut new_enum_val = Self::new(enum_val.value.into());
         new_enum_val.description(enum_val.description.map(String::from));
+        enum_val
+            .directives
+            .into_iter()
+            .for_each(|directive| new_enum_val.directive(directive.into()));
 
         new_enum_val
     }
@@ -68,11 +74,13 @@ impl<'a> DocumentBuilder<'a> {
             .transpose()?;
         let name = self.type_name()?;
         let enum_values_def = self.enum_values_definition()?;
+        let directives = self.directives()?;
 
         Ok(EnumTypeDef {
             description,
             name,
             enum_values_def,
+            directives,
         })
     }
 

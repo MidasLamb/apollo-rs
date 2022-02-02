@@ -11,12 +11,29 @@ pub struct ArgumentsDef {
     pub(crate) input_value_definitions: Vec<InputValueDef>,
 }
 
+impl From<ArgumentsDef> for apollo_encoder::ArgumentsDef {
+    fn from(args_def: ArgumentsDef) -> Self {
+        apollo_encoder::ArgumentsDef::new(
+            args_def
+                .input_value_definitions
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Argument {
     pub(crate) name: Name,
     pub(crate) value: InputValue,
 }
-// TODO implement From
+
+impl From<Argument> for apollo_encoder::Argument {
+    fn from(arg: Argument) -> Self {
+        Self::new(arg.name.into(), arg.value.into())
+    }
+}
 
 impl<'a> DocumentBuilder<'a> {
     pub fn arguments(&mut self) -> Result<Vec<Argument>> {

@@ -40,6 +40,7 @@ pub struct SchemaDef {
     query: Option<String>,
     mutation: Option<String>,
     subscription: Option<String>,
+    // TODO add directives
 }
 
 impl SchemaDef {
