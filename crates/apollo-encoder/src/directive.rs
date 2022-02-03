@@ -39,3 +39,18 @@ impl fmt::Display for Directive {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Value;
+
+    use super::*;
+
+    #[test]
+    fn it_encodes_directive() {
+        let mut directive = Directive::new(String::from("myDirective"));
+        directive.arg(Argument::new(String::from("first"), Value::Int(5)));
+
+        assert_eq!(directive.to_string(), "@myDirective(first: 5)");
+    }
+}

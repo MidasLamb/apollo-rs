@@ -58,6 +58,7 @@ pub struct InputObjectDef {
     fields: Vec<InputField>,
     /// Contains all directives.
     directives: Vec<Directive>,
+    extend: bool,
 }
 
 impl InputObjectDef {
@@ -68,7 +69,13 @@ impl InputObjectDef {
             description: StringValue::Top { source: None },
             fields: Vec::new(),
             directives: Vec::new(),
+            extend: false,
         }
+    }
+
+    /// Set the input object type as an extension
+    pub fn extend(&mut self) {
+        self.extend = true;
     }
 
     /// Set the InputObjectDef's description field.
@@ -91,7 +98,12 @@ impl InputObjectDef {
 
 impl fmt::Display for InputObjectDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description)?;
+        if self.extend {
+            write!(f, "extend ")?;
+        } else {
+            // No description when it's a extension
+            write!(f, "{}", self.description)?;
+        }
 
         write!(f, "input {}", &self.name)?;
 

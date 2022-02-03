@@ -31,6 +31,7 @@ pub struct UnionDef {
     description: StringValue,
     // The vector of members that can be represented within this union.
     members: Vec<String>,
+    extend: bool,
 }
 
 impl UnionDef {
@@ -40,7 +41,13 @@ impl UnionDef {
             name,
             description: StringValue::Top { source: None },
             members: Vec::new(),
+            extend: false,
         }
+    }
+
+    /// Set the union type as an extension
+    pub fn extend(&mut self) {
+        self.extend = true;
     }
 
     /// Set the UnionDefs description.
@@ -58,7 +65,12 @@ impl UnionDef {
 
 impl fmt::Display for UnionDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description)?;
+        if self.extend {
+            write!(f, "extend ")?;
+        } else {
+            // No description when it's a extension
+            write!(f, "{}", self.description)?;
+        }
 
         write!(f, "union {} = ", self.name)?;
 

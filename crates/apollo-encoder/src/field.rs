@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{Directive, InputValueDef, StringValue, Type_};
+use crate::{Argument, Directive, InputValueDef, SelectionSet, StringValue, Type_};
 /// The __Field type represents each field in an Object or Interface type.
 ///
 /// *FieldDefinition*:
@@ -32,7 +32,7 @@ use crate::{Directive, InputValueDef, StringValue, Type_};
 /// );
 /// ```
 #[derive(Debug, PartialEq, Clone)]
-pub struct Field {
+pub struct FieldDef {
     // Name must return a String.
     name: String,
     // Description may return a String.
@@ -49,7 +49,7 @@ pub struct Field {
     directives: Vec<Directive>,
 }
 
-impl Field {
+impl FieldDef {
     /// Create a new instance of Field.
     pub fn new(name: String, type_: Type_) -> Self {
         Self {
@@ -87,7 +87,7 @@ impl Field {
     }
 }
 
-impl fmt::Display for Field {
+impl fmt::Display for FieldDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description)?;
         write!(f, "  {}", self.name)?;
@@ -122,6 +122,70 @@ impl fmt::Display for Field {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct Field {
+    alias: Option<String>,
+    // Name must return a String.
+    name: String,
+    // Args returns a List of __InputValue representing the arguments this field accepts.
+    args: Vec<InputValueDef>,
+    /// Contains all directives.
+    directives: Vec<Directive>,
+    selection_set: Option<SelectionSet>,
+}
+
+impl Field {
+    pub fn new(name: String) -> Self {
+        Self {
+            name,
+            selection_set: None,
+            alias: None,
+            args: Vec::new(),
+            directives: Vec::new(),
+        }
+    }
+
+    pub fn alias(&mut self, alias: Option<String>) {
+        self.alias = alias;
+    }
+
+    pub fn directive(&mut self, directive: Directive) {
+        self.directives.push(directive);
+    }
+
+    pub fn argument(&mut self, argument: InputValueDef) {
+        self.args.push(argument);
+    }
+}
+
+impl fmt::Display for Field {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(alias) = &self.alias {
+            write!(f, "{}: ", alias)?;
+        }
+        write!(f, "{}", self.name)?;
+
+        if !self.args.is_empty() {
+            for (i, arg) in self.args.iter().enumerate() {
+                match i {
+                    0 => write!(f, "({}", arg)?,
+                    _ => write!(f, ", {}", arg)?,
+                }
+            }
+            write!(f, ")")?;
+        }
+
+        for directive in &self.directives {
+            write!(f, " {}", directive)?;
+        }
+        if let Some(sel_set) = &self.selection_set {
+            writeln!(f, "{}", sel_set)?;
+        }
+
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{Argument, Value};
@@ -137,7 +201,7 @@ mod tests {
 
         let ty_2 = Type_::List { ty: Box::new(ty_1) };
         let ty_3 = Type_::NonNull { ty: Box::new(ty_2) };
-        let field = Field::new("spaceCat".to_string(), ty_3);
+        let field = FieldDef::new("spaceCat".to_string(), ty_3);
 
         assert_eq!(field.to_string(), r#"  spaceCat: [SpaceProgram]!"#);
     }
@@ -149,7 +213,7 @@ mod tests {
         };
 
         let ty_2 = Type_::List { ty: Box::new(ty_1) };
-        let mut field = Field::new("cat".to_string(), ty_2);
+        let mut field = FieldDef::new("cat".to_string(), ty_2);
         field.description(Some("Very good cats".to_string()));
         field.deprecated(Some("Cats are no longer sent to space.".to_string()));
 
@@ -167,7 +231,7 @@ mod tests {
         };
 
         let ty_2 = Type_::List { ty: Box::new(ty_1) };
-        let mut field = Field::new("cat".to_string(), ty_2);
+        let mut field = FieldDef::new("cat".to_string(), ty_2);
         let mut directive = Directive::new(String::from("testDirective"));
         directive.arg(Argument::new(String::from("first"), Value::Int(1)));
         field.description(Some("Very good cats".to_string()));
@@ -190,7 +254,7 @@ mod tests {
         let ty_2 = Type_::NonNull { ty: Box::new(ty_1) };
         let ty_3 = Type_::List { ty: Box::new(ty_2) };
         let ty_4 = Type_::NonNull { ty: Box::new(ty_3) };
-        let mut field = Field::new("spaceCat".to_string(), ty_4);
+        let mut field = FieldDef::new("spaceCat".to_string(), ty_4);
         field.description(Some("Very good space cats".to_string()));
 
         assert_eq!(
@@ -209,7 +273,7 @@ mod tests {
         let ty_2 = Type_::NonNull { ty: Box::new(ty_1) };
         let ty_3 = Type_::List { ty: Box::new(ty_2) };
         let ty_4 = Type_::NonNull { ty: Box::new(ty_3) };
-        let mut field = Field::new("spaceCat".to_string(), ty_4);
+        let mut field = FieldDef::new("spaceCat".to_string(), ty_4);
         field.description(Some("Very good space cats".to_string()));
 
         let value_1 = Type_::NamedType {

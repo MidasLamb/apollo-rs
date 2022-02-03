@@ -48,6 +48,7 @@ pub struct EnumDef {
     values: Vec<EnumValue>,
     /// The vector of directives
     directives: Vec<Directive>,
+    extend: bool,
 }
 
 impl EnumDef {
@@ -58,7 +59,13 @@ impl EnumDef {
             description: StringValue::Top { source: None },
             values: Vec::new(),
             directives: Vec::new(),
+            extend: false,
         }
+    }
+
+    /// Set the enum type as an extension
+    pub fn extend(&mut self) {
+        self.extend = true;
     }
 
     /// Set the Enum Definition's description.
@@ -81,7 +88,13 @@ impl EnumDef {
 
 impl fmt::Display for EnumDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description)?;
+        if self.extend {
+            write!(f, "extend ")?;
+        } else {
+            // No description when it's a extension
+            write!(f, "{}", self.description)?;
+        }
+
         write!(f, "enum {}", self.name)?;
         for directive in &self.directives {
             write!(f, " {}", directive)?;

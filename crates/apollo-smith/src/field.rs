@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-use apollo_encoder::Field;
 use arbitrary::Result;
 
 use crate::{
@@ -17,9 +16,9 @@ pub struct FieldDef {
     pub(crate) directives: Vec<Directive>,
 }
 
-impl From<FieldDef> for Field {
+impl From<FieldDef> for apollo_encoder::FieldDef {
     fn from(val: FieldDef) -> Self {
-        let mut field = Field::new(val.name.into(), val.ty.into());
+        let mut field = Self::new(val.name.into(), val.ty.into());
         if let Some(arg) = val.arguments_definition {
             arg.input_value_definitions
                 .into_iter()
@@ -39,7 +38,6 @@ impl<'a> DocumentBuilder<'a> {
         let num_fields = self.u.int_in_range(2..=50usize)?;
         let mut fields_names = HashSet::with_capacity(num_fields);
 
-        // TODO switch to arbitrary
         for i in 0..num_fields {
             let name = self.name_with_index(i)?;
             if !exclude.contains(&&name) {

@@ -101,8 +101,8 @@ impl Default for Schema {
 #[cfg(test)]
 mod tests {
     use crate::{
-        DirectiveDef, EnumDef, EnumValue, Field, InputField, InputObjectDef, ObjectDef, ScalarDef,
-        Schema, SchemaDef, Type_, UnionDef,
+        DirectiveDef, EnumDef, EnumValue, FieldDef, InputField, InputObjectDef, ObjectDef,
+        ScalarDef, Schema, SchemaDef, Type_, UnionDef,
     };
     use indoc::indoc;
     use pretty_assertions::assert_eq;
@@ -133,7 +133,7 @@ mod tests {
             ty: Box::new(field_value),
         };
 
-        let mut field = Field::new("cat".to_string(), null_field);
+        let mut field = FieldDef::new("cat".to_string(), null_field);
         field.description(Some("Very good cats".to_string()));
 
         // Union Definition
@@ -152,20 +152,20 @@ mod tests {
             ty: Box::new(object_value),
         };
 
-        let mut object_field = Field::new("toys".to_string(), object_value_2);
+        let mut object_field = FieldDef::new("toys".to_string(), object_value_2);
         object_field.deprecated(Some("Cats are too spoiled".to_string()));
 
         let object_value_2 = Type_::NamedType {
             name: "FoodType".to_string(),
         };
 
-        let mut object_field_2 = Field::new("food".to_string(), object_value_2);
+        let mut object_field_2 = FieldDef::new("food".to_string(), object_value_2);
         object_field_2.description(Some("Dry or wet food?".to_string()));
 
         let object_field_3 = Type_::NamedType {
             name: "Boolean".to_string(),
         };
-        let object_field_3 = Field::new("catGrass".to_string(), object_field_3);
+        let object_field_3 = FieldDef::new("catGrass".to_string(), object_field_3);
 
         let mut object_def = ObjectDef::new("PetStoreTrip".to_string());
         object_def.field(object_field);
