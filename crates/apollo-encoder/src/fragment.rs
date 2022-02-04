@@ -32,7 +32,7 @@ impl fmt::Display for FragmentDef {
         for directive in &self.directives {
             write!(f, " {}", directive)?;
         }
-        writeln!(f, "{}", self.selection_set);
+        writeln!(f, " {}", self.selection_set);
 
         Ok(())
     }

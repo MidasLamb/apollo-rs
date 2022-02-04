@@ -22,7 +22,7 @@ impl fmt::Display for SelectionSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{{")?;
         for sel in &self.selections {
-            writeln!(f, "{}", sel)?;
+            writeln!(f, "  {}", sel)?;
         }
         writeln!(f, "}}")?;
 
@@ -40,9 +40,9 @@ pub enum Selection {
 impl fmt::Display for Selection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Selection::Field(field) => write!(f, "  {field}"),
-            Selection::FragmentSpread(fragment_spread) => write!(f, "  {fragment_spread}"),
-            Selection::InlineFragment(inline_fragment) => write!(f, "  {inline_fragment}"),
+            Selection::Field(field) => write!(f, "{field}"),
+            Selection::FragmentSpread(fragment_spread) => write!(f, "{fragment_spread}"),
+            Selection::InlineFragment(inline_fragment) => write!(f, "{inline_fragment}"),
         }
     }
 }

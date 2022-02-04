@@ -11,6 +11,7 @@ pub struct EnumTypeDef {
     pub(crate) name: Name,
     pub(crate) directives: Vec<Directive>,
     pub(crate) enum_values_def: HashSet<EnumValueDefinition>,
+    pub(crate) extend: bool,
 }
 
 impl From<EnumTypeDef> for EnumDef {
@@ -25,6 +26,9 @@ impl From<EnumTypeDef> for EnumDef {
             .directives
             .into_iter()
             .for_each(|directive| new_enum.directive(directive.into()));
+        if enum_.extend {
+            new_enum.extend();
+        }
 
         new_enum
     }
@@ -81,6 +85,7 @@ impl<'a> DocumentBuilder<'a> {
             name,
             enum_values_def,
             directives,
+            extend: self.u.arbitrary().unwrap_or(false),
         })
     }
 
@@ -100,7 +105,7 @@ impl<'a> DocumentBuilder<'a> {
 
     pub fn enum_values_definition(&mut self) -> Result<HashSet<EnumValueDefinition>> {
         let mut enum_values_def = HashSet::with_capacity(self.u.int_in_range(2..=10usize)?);
-        for i in 1..self.u.int_in_range(2..=10usize)? {
+        for i in 0..self.u.int_in_range(2..=10usize)? {
             let description = self
                 .u
                 .arbitrary()

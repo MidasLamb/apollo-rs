@@ -32,7 +32,6 @@ use crate::{InputValueDef, StringValue};
 /// ```
 #[derive(Debug)]
 pub struct DirectiveDef {
-    // TODO Rename to DIrectiveDef
     // Name must return a String.
     name: String,
     // Description may return a String or null.
@@ -43,6 +42,7 @@ pub struct DirectiveDef {
     // Locations returns a List of __DirectiveLocation representing the valid
     // locations this directive may be placed.
     locations: Vec<String>,
+    repeatable: bool,
 }
 
 impl DirectiveDef {
@@ -53,6 +53,7 @@ impl DirectiveDef {
             description: StringValue::Top { source: None },
             args: Vec::new(),
             locations: Vec::new(),
+            repeatable: false,
         }
     }
 
@@ -72,6 +73,11 @@ impl DirectiveDef {
     pub fn arg(&mut self, arg: InputValueDef) {
         self.args.push(arg);
     }
+
+    /// Set the Directive's repeatable
+    pub fn repeatable(&mut self) {
+        self.repeatable = true;
+    }
 }
 
 impl fmt::Display for DirectiveDef {
@@ -87,6 +93,10 @@ impl fmt::Display for DirectiveDef {
                 }
             }
             write!(f, ")")?;
+        }
+
+        if self.repeatable {
+            write!(f, " repeatable")?;
         }
 
         for (i, location) in self.locations.iter().enumerate() {

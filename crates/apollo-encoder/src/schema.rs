@@ -33,6 +33,7 @@ use crate::{
 /// );
 /// ```
 #[derive(Debug)]
+// TODO delete in profit of Document
 pub struct Schema {
     buf: String,
 }

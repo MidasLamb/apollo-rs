@@ -44,6 +44,13 @@ impl Ty {
             Ty::NonNull(non_null) => non_null.name(),
         }
     }
+
+    /// Returns `true` if the ty is [`Named`].
+    ///
+    /// [`Named`]: Ty::Named
+    pub fn is_named(&self) -> bool {
+        matches!(self, Self::Named(..))
+    }
 }
 
 impl<'a> DocumentBuilder<'a> {
@@ -53,6 +60,15 @@ impl<'a> DocumentBuilder<'a> {
 
     pub fn choose_ty(&mut self, existing_types: &[Ty]) -> Result<Ty> {
         self._choose_ty(existing_types, true)
+    }
+
+    pub fn choose_named_ty(&mut self, existing_types: &[Ty]) -> Result<Ty> {
+        let used_type_names: Vec<&Ty> = existing_types
+            .iter()
+            .chain(BUILTIN_SCALAR_NAMES.iter())
+            .collect();
+
+        Ok(self.u.choose(&used_type_names)?.to_owned().clone())
     }
 
     fn _choose_ty(&mut self, existing_types: &[Ty], is_nullable: bool) -> Result<Ty> {
@@ -112,6 +128,13 @@ impl<'a> DocumentBuilder<'a> {
                     .iter()
                     .map(|e| Ty::Named(e.name.clone())),
             )
+            .collect()
+    }
+
+    pub(crate) fn list_existing_object_types(&self) -> Vec<Ty> {
+        self.object_type_defs
+            .iter()
+            .map(|o| Ty::Named(o.name.clone()))
             .collect()
     }
 }

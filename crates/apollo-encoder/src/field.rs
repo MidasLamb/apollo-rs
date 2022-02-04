@@ -128,7 +128,7 @@ pub struct Field {
     // Name must return a String.
     name: String,
     // Args returns a List of __InputValue representing the arguments this field accepts.
-    args: Vec<InputValueDef>,
+    args: Vec<Argument>,
     /// Contains all directives.
     directives: Vec<Directive>,
     selection_set: Option<SelectionSet>,
@@ -153,8 +153,12 @@ impl Field {
         self.directives.push(directive);
     }
 
-    pub fn argument(&mut self, argument: InputValueDef) {
+    pub fn argument(&mut self, argument: Argument) {
         self.args.push(argument);
+    }
+
+    pub fn selection_set(&mut self, selection_set: Option<SelectionSet>) {
+        self.selection_set = selection_set;
     }
 }
 

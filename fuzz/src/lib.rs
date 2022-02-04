@@ -7,17 +7,17 @@ pub fn generate_valid_document(
 ) -> Result<String> {
     let mut u = Unstructured::new(input);
     let gql_doc = DocumentBuilder::new(&mut u)?;
-    let schema = gql_doc.finish().finish();
+    let document = gql_doc.finish();
     // Use wasm-smith to generate an arbitrary module and convert it to wasm
     // bytes.
     // let module = document::document(&mut u);
     // let module_str = module.finish();
     println!(
         "doc =====================\n {}\n========================",
-        schema
+        document
     );
 
-    Ok(schema)
+    Ok(document)
 }
 
 // // Optionally log the module and its configuration if we've gotten this

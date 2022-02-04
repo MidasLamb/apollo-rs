@@ -3,7 +3,12 @@ use std::collections::HashSet;
 use arbitrary::Result;
 
 use crate::{
-    argument::ArgumentsDef, description::Description, directive::Directive, name::Name, ty::Ty,
+    argument::{Argument, ArgumentsDef},
+    description::Description,
+    directive::Directive,
+    name::Name,
+    selection_set::SelectionSet,
+    ty::Ty,
     DocumentBuilder,
 };
 
@@ -30,6 +35,33 @@ impl From<FieldDef> for apollo_encoder::FieldDef {
             .for_each(|directive| field.directive(directive.into()));
 
         field
+    }
+}
+
+#[derive(Debug)]
+pub struct Field {
+    pub(crate) alias: Option<Name>,
+    pub(crate) name: Name,
+    pub(crate) args: Vec<Argument>,
+    pub(crate) directives: Vec<Directive>,
+    pub(crate) selection_set: Option<SelectionSet>,
+}
+
+impl From<Field> for apollo_encoder::Field {
+    fn from(field: Field) -> Self {
+        let mut new_field = Self::new(field.name.into());
+        new_field.alias(field.alias.map(String::from));
+        field
+            .args
+            .into_iter()
+            .for_each(|arg| new_field.argument(arg.into()));
+        field
+            .directives
+            .into_iter()
+            .for_each(|directive| new_field.directive(directive.into()));
+        new_field.selection_set(field.selection_set.map(Into::into));
+
+        new_field
     }
 }
 
@@ -70,5 +102,31 @@ impl<'a> DocumentBuilder<'a> {
                 })
             })
             .collect()
+    }
+
+    pub fn field_with_index(&mut self, index: usize) -> Result<Field> {
+        let alias = self
+            .u
+            .arbitrary()
+            .unwrap_or(false)
+            .then(|| self.name_with_index(index))
+            .transpose()?;
+        let name = self.name_with_index(index)?;
+        let args = self.arguments()?;
+        let directives = self.directives()?;
+        let selection_set = self
+            .u
+            .arbitrary()
+            .unwrap_or(false)
+            .then(|| self.selection_set())
+            .transpose()?;
+
+        Ok(Field {
+            alias,
+            name,
+            args,
+            directives,
+            selection_set,
+        })
     }
 }

@@ -7,12 +7,14 @@ use crate::{
     description::Description, directive::Directive, field::FieldDef, name::Name, DocumentBuilder,
 };
 
+#[derive(Debug)]
 pub struct ObjectTypeDef {
     pub(crate) description: Option<Description>,
     pub(crate) name: Name,
     pub(crate) interface_impls: HashSet<Name>,
     pub(crate) directives: Vec<Directive>,
     pub(crate) fields_def: Vec<FieldDef>,
+    pub(crate) extend: bool,
 }
 
 impl From<ObjectTypeDef> for ObjectDef {
@@ -28,6 +30,9 @@ impl From<ObjectTypeDef> for ObjectDef {
         val.directives
             .into_iter()
             .for_each(|directive| object_def.directive(directive.into()));
+        if val.extend {
+            object_def.extend();
+        }
 
         object_def
     }
@@ -72,6 +77,7 @@ impl<'a> DocumentBuilder<'a> {
             interface_impls,
             name,
             fields_def,
+            extend: self.u.arbitrary().unwrap_or(false),
         })
     }
 }

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::StringValue;
+use crate::{Directive, StringValue};
 
 /// UnionDefs are an abstract type where no common fields are declared.
 ///
@@ -31,6 +31,8 @@ pub struct UnionDef {
     description: StringValue,
     // The vector of members that can be represented within this union.
     members: Vec<String>,
+    /// Contains all directives.
+    directives: Vec<Directive>,
     extend: bool,
 }
 
@@ -42,6 +44,7 @@ impl UnionDef {
             description: StringValue::Top { source: None },
             members: Vec::new(),
             extend: false,
+            directives: Vec::new(),
         }
     }
 
@@ -55,6 +58,11 @@ impl UnionDef {
         self.description = StringValue::Top {
             source: description,
         };
+    }
+
+    /// Add a directive
+    pub fn directive(&mut self, directive: Directive) {
+        self.directives.push(directive);
     }
 
     /// Set a UnionDef member.
@@ -72,11 +80,17 @@ impl fmt::Display for UnionDef {
             write!(f, "{}", self.description)?;
         }
 
-        write!(f, "union {} = ", self.name)?;
+        write!(f, "union {}", self.name)?;
+
+        for directive in &self.directives {
+            write!(f, " {}", directive)?;
+        }
+
+        write!(f, " =")?;
 
         for (i, member) in self.members.iter().enumerate() {
             match i {
-                0 => write!(f, "{}", member)?,
+                0 => write!(f, " {}", member)?,
                 _ => write!(f, " | {}", member)?,
             }
         }

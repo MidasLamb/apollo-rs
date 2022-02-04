@@ -11,10 +11,10 @@ use crate::{
 pub struct InterfaceTypeDef {
     pub(crate) description: Option<Description>,
     pub(crate) name: Name,
-    // TODO
-    // interfaces: Vec<String>
+    pub(crate) interfaces: HashSet<Name>,
     pub(crate) directives: Vec<Directive>,
     pub(crate) fields_def: Vec<FieldDef>,
+    pub(crate) extend: bool,
 }
 
 impl From<InterfaceTypeDef> for InterfaceDef {
@@ -27,7 +27,12 @@ impl From<InterfaceTypeDef> for InterfaceDef {
         itf.directives
             .into_iter()
             .for_each(|directive| itf_def.directive(directive.into()));
-        // TODO interfaces
+        itf.interfaces
+            .into_iter()
+            .for_each(|interface| itf_def.interface(interface.into()));
+        if itf.extend {
+            itf_def.extend();
+        }
 
         itf_def
     }
@@ -44,17 +49,23 @@ impl<'a> DocumentBuilder<'a> {
         let name = self.type_name()?;
         let fields_def = self.fields_definition(&[])?;
         let directives = self.directives()?;
+        let interfaces = self.interface_implements()?;
 
         Ok(InterfaceTypeDef {
             description,
             name,
             fields_def,
             directives,
+            extend: self.u.arbitrary().unwrap_or(false),
+            interfaces,
         })
     }
 
     pub fn interface_implements(&mut self) -> Result<HashSet<Name>> {
-        // let num_itf = self.u.arbitrary::<usize>().unwrap() % self.interface_type_defs.len();
+        if self.interface_type_defs.is_empty() {
+            return Ok(HashSet::new());
+        }
+
         let num_itf = self
             .u
             .int_in_range(0..=(self.interface_type_defs.len() - 1))?;

@@ -6,7 +6,7 @@ use crate::{
     DocumentBuilder,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ArgumentsDef {
     pub(crate) input_value_definitions: Vec<InputValueDef>,
 }

@@ -61,7 +61,7 @@ impl From<InputValue> for String {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InputValueDef {
     pub(crate) description: Option<Description>,
     pub(crate) name: Name,
@@ -71,6 +71,20 @@ pub struct InputValueDef {
 }
 
 impl From<InputValueDef> for apollo_encoder::InputValueDef {
+    fn from(input_val: InputValueDef) -> Self {
+        let mut new_input_val = Self::new(input_val.name.into(), input_val.ty.into());
+        new_input_val.description(input_val.description.map(String::from));
+        new_input_val.default(input_val.default_value.map(String::from));
+        input_val
+            .directives
+            .into_iter()
+            .for_each(|directive| new_input_val.directive(directive.into()));
+
+        new_input_val
+    }
+}
+
+impl From<InputValueDef> for apollo_encoder::InputField {
     fn from(input_val: InputValueDef) -> Self {
         let mut new_input_val = Self::new(input_val.name.into(), input_val.ty.into());
         new_input_val.description(input_val.description.map(String::from));
@@ -111,14 +125,14 @@ impl<'a> DocumentBuilder<'a> {
             6 => {
                 // FIXME: it's semantically wrong it should always be the same type inside
                 InputValue::List(
-                    (1..self.u.int_in_range(2..=4usize)?)
+                    (0..self.u.int_in_range(2..=4usize)?)
                         .map(|_| self.input_value())
                         .collect::<Result<Vec<_>>>()?,
                 )
             }
             // Object
             7 => InputValue::Object(
-                (1..self.u.int_in_range(2..=4usize)?)
+                (0..self.u.int_in_range(2..=4usize)?)
                     .map(|_| Ok((self.name()?, self.input_value()?)))
                     .collect::<Result<Vec<_>>>()?,
             ),
